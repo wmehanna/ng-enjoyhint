@@ -1,6 +1,6 @@
 import { Injectable, Injector } from '@angular/core';
 import { EnjoyHintComponent } from './component/enjoy-hint.component';
-import { firstValueFrom, zip } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { EnjoyHintRef } from './support/EnjoyHintRef';
 import { Elements } from './util/dom-helpers';
 import { IEnjoyHintOptions, ITutorialStep } from './lib.interfaces';
@@ -25,6 +25,16 @@ export class EnjoyHintService {
     private readonly elements: Elements,
     private readonly originalOverflow: string
   ) {}
+
+  /**
+   * Scroll to the specified element smoothly.
+   * @param element The HTMLElement to scroll into view.
+   */
+  scrollToElement(element: HTMLElement): void {
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    }
+  }
 
   /**
    * Run an interactive tutorial
@@ -64,6 +74,15 @@ export class EnjoyHintService {
     try {
       this.elements.body.style.overflow = 'hidden';
       overlayRef.attach(portal);
+
+      steps.forEach(step => {
+        // @ts-ignore
+        const element = document.querySelector(step.selector);
+        if (element instanceof HTMLElement) {
+          this.scrollToElement(element);
+        }
+      });
+
       return await firstValueFrom(enjoyHintRef.onClose);
     } finally {
       this.elements.body.style.overflow = this.originalOverflow;
